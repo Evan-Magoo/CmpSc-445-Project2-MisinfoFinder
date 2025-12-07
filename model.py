@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 import pickle
 
 # -----------------------------------------------------------
-# ORIGINAL TEAM MODEL (Left exactly as provided)
+# ORIGINAL TEAM MODEL
 # -----------------------------------------------------------
 
 real = pd.read_csv('data/True.csv')
