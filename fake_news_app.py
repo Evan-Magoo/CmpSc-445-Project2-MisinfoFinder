@@ -16,6 +16,67 @@ window.configure(bg='#001E44')
 logo = tk.PhotoImage(file="favicon.png")
 window.iconphoto(False, logo)
 
+def navigation_bar():
+    screen_selection = tk.Frame(window, bg="#001E44")
+    screen_selection.pack(pady=10, side=tk.BOTTOM)
+
+    fake_news_button = tk.Button(
+        screen_selection,
+        text="Fake News Detection",
+        width=20,
+        bg="#3b5998",
+        fg="white",
+        font=("Arial", 11, "bold"),
+        activebackground="#96BEE6",
+        activeforeground="white",
+        highlightthickness=0,
+        command=fake_news_screen
+    )
+
+    fake_classifciation_button = tk.Button(
+        screen_selection,
+        text="Fake News Classification",
+        width=20,
+        bg="#3b5998",
+        fg="white",
+        font=("Arial", 11, "bold"),
+        activebackground="#96BEE6",
+        activeforeground="white",
+        highlightthickness=0,
+        command=fake_news_classification_screen
+    )
+
+    article_word_cloud_button = tk.Button(
+        screen_selection,
+        text="Article Word Cloud",
+        width=20,
+        bg="#3b5998",
+        fg="white",
+        font=("Arial", 11, "bold"),
+        activebackground="#96BEE6",
+        activeforeground="white",
+        highlightthickness=0,
+        command=article_word_cloud_screen
+    )
+
+    article_summarizer_button = tk.Button(
+        screen_selection,
+        text="Article Summarizer",
+        width=20,
+        bg="#3b5998",
+        fg="white",
+        font=("Arial", 11, "bold"),
+        activebackground="#96BEE6",
+        activeforeground="white",
+        highlightthickness=0,
+        command=article_summarizer_screen
+    )
+
+    fake_news_button.grid(row=0, column=0, padx=10, pady=10)
+    fake_classifciation_button.grid(row=0, column=1, padx=10, pady=10)
+    article_word_cloud_button.grid(row=0, column=2, padx=10, pady=10)
+    article_summarizer_button.grid(row=0, column=3, padx=10, pady=10)
+
 def predict_news(link):
     global output_box
     output_box.delete(1.0, tk.END)
@@ -26,12 +87,32 @@ def predict_news(link):
         article.parse()
         text = article.text
 
-        text_vectorized = vectorizer.transform([text])
-        prediction = model.predict(text_vectorized)[0]
+        vec = vectorizer.transform([text])
+        prediction = model.predict(vec)[0]
         result = "REAL" if prediction == 1 else "FAKE"
 
-        output_box.insert(tk.END, f"Prediction: {result}\n\n")
-        output_box.insert(tk.END, "---- Article Text ----\n\n")
+        contributions = vec.toarray()[0] * model.coef_[0]
+
+        feature_names = vectorizer.get_feature_names_out()
+
+        word_contributions = list(zip(feature_names, contributions))
+        word_contribs_sorted = sorted(word_contributions, key=lambda x: x[1], reverse=True)
+
+        top_fake_words = [f"{word}: {contrib:.4f}" for word, contrib in word_contribs_sorted[:10]]
+        top_real_words = [f"{word}: {contrib:.4f}" for word, contrib in word_contribs_sorted[-10:]]
+
+        output_box.insert(tk.END, f"Prediction: {result}\n")
+        output_box.insert(tk.END, "\n---- Top Fake-Influencing Words ----\n", "header")
+
+        for word in top_fake_words:
+            output_box.insert(tk.END, word + "\n")
+
+        output_box.insert(tk.END, "\n---- Top Real-Influencing Words ----\n", "header")
+
+        for word in top_real_words:
+            output_box.insert(tk.END, word + "\n")
+
+        output_box.insert(tk.END, "\n---- Article Text ----\n\n")
         output_box.insert(tk.END, text)
 
     except Exception as e:
@@ -100,66 +181,9 @@ def fake_news_screen():
     )
     output_box.pack(pady=20)
 
-    screen_selection = tk.Frame(window, bg="#001E44")
-    screen_selection.pack(pady=10, side=tk.BOTTOM)
+    navigation_bar()
 
-    fake_news_button = tk.Button(
-        screen_selection,
-        text="Fake News Detection",
-        width=20,
-        bg="#3b5998",
-        fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=fake_news_screen
-    )
-
-    fake_classifciation_button = tk.Button(
-        screen_selection,
-        text="Fake News Classification",
-        width=20,
-        bg="#3b5998",
-        fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=fake_news_classification_screen
-    )
-
-    article_word_cloud_button = tk.Button(
-        screen_selection,
-        text="Article Word Cloud",
-        width=20,
-        bg="#3b5998",
-        fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=article_word_cloud_screen
-    )
-
-    article_summarizer_button = tk.Button(
-        screen_selection,
-        text="Article Summarizer",
-        width=20,
-        bg="#3b5998",
-        fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=article_summarizer_screen
-    )
-
-    fake_news_button.grid(row=0, column=0, padx=10)
-    fake_classifciation_button.grid(row=0, column=1, padx=10)
-    article_word_cloud_button.grid(row=0, column=2, padx=10)
-    article_summarizer_button.grid(row=0, column=3, padx=10)
-
+    
 def fake_news_classification_screen():
     clear_screen()
     title_label = tk.Label(
@@ -171,65 +195,53 @@ def fake_news_classification_screen():
     )
     title_label.pack(pady=10)
 
-    screen_selection = tk.Frame(window, bg="#001E44")
-    screen_selection.pack(pady=10, side=tk.BOTTOM)
+    link = tk.StringVar()
 
-    fake_news_button = tk.Button(
-        screen_selection,
-        text="Fake News Detection",
-        width=20,
+    controls = tk.Frame(window, bg="#001E44")
+    controls.pack(pady=10)
+
+    entry_label = tk.Label(
+        controls, 
+        text='Article Link:', 
+        font=('Arial', 12, 'bold'),
+        fg='white',
+        background='#001E44'
+    )
+
+    entry = tk.Entry(
+        controls,
+        textvariable=link,
+        width = 50,
+        font=("Arial", 12)
+    )
+
+    entry_button = tk.Button(
+        controls,
+        text="Enter",
+        width=12,
         bg="#3b5998",
         fg="white",
         font=("Arial", 11, "bold"),
         activebackground="#96BEE6",
         activeforeground="white",
         highlightthickness=0,
-        command=fake_news_screen
+        command=lambda: predict_news(entry.get())
     )
 
-    fake_classifciation_button = tk.Button(
-        screen_selection,
-        text="Fake News Classification",
-        width=20,
-        bg="#3b5998",
-        fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=fake_news_classification_screen
-    )
+    entry_label.grid(row=0, column=0, padx=5)
+    entry.grid(row=0, column=1, padx=5)
+    entry_button.grid(row=0, column=2, padx=5)
 
-    article_word_cloud_button = tk.Button(
-        screen_selection,
-        text="Article Word Cloud",
-        width=20,
-        bg="#3b5998",
-        fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=article_word_cloud_screen
+    output_box = scrolledtext.ScrolledText(
+        window,
+        wrap=tk.WORD,
+        width=90,
+        height=25,
+        font=("Arial", 12)
     )
+    output_box.pack(pady=20)
 
-    article_summarizer_button = tk.Button(  
-        screen_selection,
-        text="Article Summarizer",
-        width=20,
-        bg="#3b5998",
-        fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=article_summarizer_screen
-    )
-
-    fake_news_button.grid(row=0, column=0, padx=10)
-    fake_classifciation_button.grid(row=0, column=1, padx=10)
-    article_word_cloud_button.grid(row=0, column=2, padx=10)
-    article_summarizer_button.grid(row=0, column=3, padx=10)
+    navigation_bar()
 
 def article_word_cloud_screen():
     clear_screen()
@@ -299,65 +311,7 @@ def article_word_cloud_screen():
     )
     generate_button.grid(row=0, column=2, padx=5)
 
-    screen_selection = tk.Frame(window, bg="#001E44")
-    screen_selection.pack(pady=10, side=tk.BOTTOM)
-
-    fake_news_button = tk.Button(
-        screen_selection,
-        text="Fake News Detection",
-        width=20,
-        bg="#3b5998",
-        fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=fake_news_screen
-    )
-
-    fake_classifciation_button = tk.Button(
-        screen_selection,
-        text="Fake News Classification",
-        width=20,
-        bg="#3b5998",
-        fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=fake_news_classification_screen
-    )
-
-    article_word_cloud_button = tk.Button(
-        screen_selection,
-        text="Article Word Cloud",
-        width=20,
-        bg="#3b5998",
-        fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=article_word_cloud_screen
-    )
-
-    article_summarizer_button = tk.Button(
-        screen_selection,
-        text="Article Summarizer",
-        width=20,
-        bg="#3b5998",
-        fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=article_summarizer_screen
-    )
-
-    fake_news_button.grid(row=0, column=0, padx=10)
-    fake_classifciation_button.grid(row=0, column=1, padx=10)
-    article_word_cloud_button.grid(row=0, column=2, padx=10)
-    article_summarizer_button.grid(row=0, column=3, padx=10)
+    navigation_bar()
 
 def article_summarizer_screen():
     clear_screen()
@@ -370,65 +324,7 @@ def article_summarizer_screen():
     )
     title_label.pack(pady=10)
 
-    screen_selection = tk.Frame(window, bg="#001E44")
-    screen_selection.pack(pady=10, side=tk.BOTTOM)
-
-    fake_news_button = tk.Button(
-        screen_selection,
-        text="Fake News Detection",
-        width=20,
-        bg="#3b5998",
-        fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=fake_news_screen
-    )
-
-    fake_classifciation_button = tk.Button(
-        screen_selection,
-        text="Fake News Classification",
-        width=20,
-        bg="#3b5998",
-        fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=fake_news_classification_screen
-    )
-
-    article_word_cloud_button = tk.Button(
-        screen_selection,
-        text="Article Word Cloud",
-        width=20,
-        bg="#3b5998",
-        fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=article_word_cloud_screen
-    )
-
-    article_summarizer_button = tk.Button(
-        screen_selection,
-        text="Article Summarizer",
-        width=20,
-        bg="#3b5998",
-        fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=article_summarizer_screen
-    )
-
-    fake_news_button.grid(row=0, column=0, padx=10)
-    fake_classifciation_button.grid(row=0, column=1, padx=10)
-    article_word_cloud_button.grid(row=0, column=2, padx=10)
-    article_summarizer_button.grid(row=0, column=3, padx=10)
+    navigation_bar()
 
 
 if __name__ == "__main__":
