@@ -33,9 +33,9 @@ def navigation_bar():
         command=fake_news_screen
     )
 
-    fake_classifciation_button = tk.Button(
+    misinfo_button = tk.Button(
         screen_selection,
-        text="Fake News Classification",
+        text="Misinfo Analysis",
         width=20,
         bg="#3b5998",
         fg="white",
@@ -43,7 +43,7 @@ def navigation_bar():
         activebackground="#96BEE6",
         activeforeground="white",
         highlightthickness=0,
-        command=fake_news_classification_screen
+        command=misinfo_screen
     )
 
     article_word_cloud_button = tk.Button(
@@ -73,7 +73,7 @@ def navigation_bar():
     )
 
     fake_news_button.grid(row=0, column=0, padx=10, pady=10)
-    fake_classifciation_button.grid(row=0, column=1, padx=10, pady=10)
+    misinfo_button.grid(row=0, column=1, padx=10, pady=10)
     article_word_cloud_button.grid(row=0, column=2, padx=10, pady=10)
     article_summarizer_button.grid(row=0, column=3, padx=10, pady=10)
 
@@ -184,62 +184,16 @@ def fake_news_screen():
     navigation_bar()
 
     
-def fake_news_classification_screen():
+def misinfo_screen():
     clear_screen()
     title_label = tk.Label(
         window,
-        text="Fake News Classification",
+        text="Misinformation Analysis",
         font=("Arial", 20, "bold"),
         fg="white",
         bg="#001E44"
     )
     title_label.pack(pady=10)
-
-    link = tk.StringVar()
-
-    controls = tk.Frame(window, bg="#001E44")
-    controls.pack(pady=10)
-
-    entry_label = tk.Label(
-        controls, 
-        text='Article Link:', 
-        font=('Arial', 12, 'bold'),
-        fg='white',
-        background='#001E44'
-    )
-
-    entry = tk.Entry(
-        controls,
-        textvariable=link,
-        width = 50,
-        font=("Arial", 12)
-    )
-
-    entry_button = tk.Button(
-        controls,
-        text="Enter",
-        width=12,
-        bg="#3b5998",
-        fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=lambda: predict_news(entry.get())
-    )
-
-    entry_label.grid(row=0, column=0, padx=5)
-    entry.grid(row=0, column=1, padx=5)
-    entry_button.grid(row=0, column=2, padx=5)
-
-    output_box = scrolledtext.ScrolledText(
-        window,
-        wrap=tk.WORD,
-        width=90,
-        height=25,
-        font=("Arial", 12)
-    )
-    output_box.pack(pady=20)
 
     navigation_bar()
 
