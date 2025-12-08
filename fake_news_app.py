@@ -1,4 +1,6 @@
 import tkinter as tk
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
 from tkinter import scrolledtext
 from tkinter import messagebox
 from PIL import Image, ImageTk
@@ -9,12 +11,30 @@ import pickle
 model = pickle.load(open('model.pkl', 'rb'))
 vectorizer = pickle.load(open('vectorizer.pkl', 'rb'))
 
+# --- Extracted Data for Analysis ---
+
+X_train_tfidf = pickle.load(open('X_train_tfidf.pkl', 'rb'))
+tfidf_matrix = X_train_tfidf.toarray()
+feature_names = vectorizer.get_feature_names_out()
+weights = model.coef_[0]
+avg_tfidf = np.mean(tfidf_matrix, axis=0)
+max_tfidf = np.max(tfidf_matrix, axis=0)
+idf_values = vectorizer.idf_
+avg_tf = avg_tfidf / idf_values
+
+binary_matrix = (tfidf_matrix > 0).astype(int)
+doc_freq = np.sum(binary_matrix, axis=0)
+
+# --- GUI Setup ---
+
 window = tk.Tk()
 window.title('Abington Evacuation Tool')
 window.geometry('900x700')
 window.configure(bg='#001E44')
 logo = tk.PhotoImage(file="favicon.png")
 window.iconphoto(False, logo)
+
+# --- Navigation Bar ---
 
 def navigation_bar():
     screen_selection = tk.Frame(window, bg="#001E44")
@@ -193,7 +213,64 @@ def misinfo_screen():
         fg="white",
         bg="#001E44"
     )
-    title_label.pack(pady=10)
+    title_label.pack(pady=5)
+
+    misinfo_label = tk.Label(
+        window,
+        text="Top 50 Misinformation-Influencing Words",
+        font=("Arial", 14, "bold"),
+        fg="white",
+        bg="#001E44"
+    )
+    misinfo_label.pack(pady=5)
+
+    misinfo_box = scrolledtext.ScrolledText(
+        window,
+        wrap=tk.WORD,
+        width=90,
+        height=12,
+        font=("Consolas", 12)
+    )
+    misinfo_box.pack(pady=5)
+
+    real_label = tk.Label(
+        window,
+        text="Top 50 Real-Influencing Words ",
+        font=("Arial", 14, "bold"),
+        fg="white",
+        bg="#001E44"
+    )
+    real_label.pack(pady=5)
+
+    real_box = scrolledtext.ScrolledText(
+        window,
+        wrap=tk.WORD,
+        width=90,
+        height=12,
+        font=("Consolas", 12)
+    )
+    real_box.pack(pady=5)
+
+    # --- Misinfo Words ---
+    indices = np.argsort(weights)[:50]
+    misinfo_box.insert(tk.END, "  # | Word             | Weight  | Avg TF-IDF | Max TF-IDF | Avg TF | IDF    | Doc Freq \n")
+    misinfo_box.insert(tk.END, "----+------------------+---------+------------+------------+--------+--------+----------\n")
+
+    for index, i in enumerate(indices):
+        misinfo_box.insert(
+            tk.END, 
+            f"{index+1:>3} | {feature_names[i]:<16} | {weights[i]:<7.4f} | {avg_tfidf[i]:<10.4f} | {max_tfidf[i]:<10.4f} | {avg_tf[i]:<5.4f} | {idf_values[i]:<5.4f} | {doc_freq[i]:<9} \n"
+        )
+
+    # --- Real Words ---
+    indices = np.argsort(weights)[-50:][::-1]
+    real_box.insert(tk.END, "  # | Word             | Weight  | Avg TF-IDF | Max TF-IDF | Avg TF | IDF    | Doc Freq \n")
+    real_box.insert(tk.END, "----+------------------+---------+------------+------------+--------+--------+----------\n")
+    for index, i in enumerate(indices):
+        real_box.insert(
+            tk.END,
+            f"{index+1:>3} | {feature_names[i]:<16} | {weights[i]:<7.4f} | {avg_tfidf[i]:<10.4f} | {max_tfidf[i]:<10.4f} | {avg_tf[i]:<5.4f} | {idf_values[i]:<5.4f} | {doc_freq[i]:<9} \n"
+        )
 
     navigation_bar()
 

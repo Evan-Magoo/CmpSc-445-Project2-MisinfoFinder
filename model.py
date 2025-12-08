@@ -57,6 +57,9 @@ with open('model.pkl', 'wb') as model_file:
 with open('vectorizer.pkl', 'wb') as vec_file:
     pickle.dump(vectorizer, vec_file)
 
+with open('X_train_tfidf.pkl', 'wb') as f:
+    pickle.dump(X_train_tfidf, f)
+
 print("Original model and vectorizer saved successfully.")
 
 # =====================================================================
@@ -70,41 +73,42 @@ print("Original model and vectorizer saved successfully.")
 # - Saves separately as improved_model.pkl
 # =====================================================================
 
-print("\n\n================ IMPROVED MODEL ================")
+# print("\n\n================ IMPROVED MODEL ================")
 
-improved_vectorizer = TfidfVectorizer(
-    stop_words='english',
-    max_df=0.7,
-    min_df=5,
-    ngram_range=(1, 2)  # includes bigrams
-)
+# improved_vectorizer = TfidfVectorizer(
+#     stop_words='english',
+#     max_df=0.7,
+#     min_df=5,
+#     ngram_range=(1, 2)  # includes bigrams
+# )
 
-X_train_tfidf2 = improved_vectorizer.fit_transform(X_train)
-X_test_tfidf2 = improved_vectorizer.transform(X_test)
+# X_train_tfidf2 = improved_vectorizer.fit_transform(X_train)
+# X_test_tfidf2 = improved_vectorizer.transform(X_test)
 
-improved_model = LogisticRegression(
-    max_iter=500,
-    class_weight='balanced'
-)
+# improved_model = LogisticRegression(
+#     max_iter=500,
+#     class_weight='balanced'
+# )
 
-improved_model.fit(X_train_tfidf2, y_train)
+# improved_model.fit(X_train_tfidf2, y_train)
 
-y_pred2 = improved_model.predict(X_test_tfidf2)
+# y_pred2 = improved_model.predict(X_test_tfidf2)
 
-accuracy2 = accuracy_score(y_test, y_pred2)
-report2 = classification_report(y_test, y_pred2)
-conf_matrix2 = confusion_matrix(y_test, y_pred2)
+# accuracy2 = accuracy_score(y_test, y_pred2)
+# report2 = classification_report(y_test, y_pred2)
+# conf_matrix2 = confusion_matrix(y_test, y_pred2)
 
-print("Improved Model Accuracy:", accuracy2)
-print(report2)
-print(conf_matrix2)
+# print("Improved Model Accuracy:", accuracy2)
+# print(report2)
+# print(conf_matrix2)
 
-# Save improved model (keeps original model untouched)
-with open('improved_model.pkl', 'wb') as f:
-    pickle.dump(improved_model, f)
+# # Save improved model (keeps original model untouched)
+# with open('improved_model.pkl', 'wb') as f:
+#     pickle.dump(improved_model, f)
 
-with open('improved_vectorizer.pkl', 'wb') as f:
-    pickle.dump(improved_vectorizer, f)
+# with open('improved_vectorizer.pkl', 'wb') as f:
+#     pickle.dump(improved_vectorizer, f)
 
-print("Improved model saved as improved_model.pkl")
-print("Improved vectorizer saved as improved_vectorizer.pkl")
+
+# print("Improved model saved as improved_model.pkl")
+# print("Improved vectorizer saved as improved_vectorizer.pkl")
