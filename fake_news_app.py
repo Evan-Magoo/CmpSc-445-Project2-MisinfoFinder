@@ -1,6 +1,10 @@
 import tkinter as tk
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import TfidfVectorizer
+import nltk
+nltk.download('punkt')
+from nltk.tokenize import sent_tokenize
 from tkinter import scrolledtext
 from tkinter import messagebox
 from PIL import Image, ImageTk
@@ -97,9 +101,8 @@ def navigation_bar():
     article_word_cloud_button.grid(row=0, column=2, padx=10, pady=10)
     article_summarizer_button.grid(row=0, column=3, padx=10, pady=10)
 
-def predict_news(link):
-    global output_box
-    output_box.delete(1.0, tk.END)
+def predict_news(link, widget):
+    widget.delete(1.0, tk.END)
 
     try:
         article = Article(link)
@@ -120,39 +123,29 @@ def predict_news(link):
         top_fake_words = [f"{word}: {contrib:.4f}" for word, contrib in word_contribs_sorted[:10]]
         top_real_words = [f"{word}: {contrib:.4f}" for word, contrib in word_contribs_sorted[-10:]]
 
-        output_box.insert(tk.END, f"Prediction: {result}\n")
-        output_box.insert(tk.END, "\n---- Top Fake-Influencing Words ----\n", "header")
+        widget.insert(tk.END, f"Prediction: {result}\n")
+        widget.insert(tk.END, "\n---- Top Fake-Influencing Words ----\n", "header")
 
         for word in top_fake_words:
-            output_box.insert(tk.END, word + "\n")
-
-        output_box.insert(tk.END, "\n---- Top Real-Influencing Words ----\n", "header")
+            widget.insert(tk.END, word + "\n")
+        widget.insert(tk.END, "\n---- Top Real-Influencing Words ----\n", "header")
 
         for word in top_real_words:
-            output_box.insert(tk.END, word + "\n")
+            widget.insert(tk.END, word + "\n")
 
-        output_box.insert(tk.END, "\n---- Article Text ----\n\n")
-        output_box.insert(tk.END, text)
-
-    except Exception as e:
-        output_box.insert(tk.END, f"Error fetching article:\n{e}")
-
-def summarize_article(link):
-    global output_box
-    output_box.delete(1.0, tk.END)
-
-    try:
-        article = Article(link)
-        article.download()
-        article.parse()
-        article.nlp()
-        summary = article.summary
-
-        output_box.insert(tk.END, "---- Article Summary ----\n\n")
-        output_box.insert(tk.END, summary)
+        widget.insert(tk.END, "\n---- Article Text ----\n\n")
+        widget.insert(tk.END, text)
 
     except Exception as e:
-        output_box.insert(tk.END, f"Error fetching article:\n{e}")
+        widget.insert(tk.END, f"Error fetching article:\n{e}")
+
+
+
+def summarize_article(link, widget):
+    widget.delete(1.0, tk.END)
+
+
+
 
 def clear_screen():
     for widget in window.winfo_children():
@@ -218,8 +211,7 @@ def fake_news_screen():
     output_box.pack(pady=20)
 
     navigation_bar()
-
-    
+ 
 def misinfo_screen():
     clear_screen()
     title_label = tk.Label(
@@ -361,6 +353,7 @@ def article_word_cloud_screen():
     navigation_bar()
 
 def article_summarizer_screen():
+    global summary_box
     clear_screen()
 
     title_label = tk.Label(
@@ -394,7 +387,7 @@ def article_summarizer_screen():
 
     entry_button = tk.Button(
         controls,
-        text="Enter",
+        text="Summarize",
         width=12,
         bg="#3b5998",
         fg="white",
@@ -402,21 +395,21 @@ def article_summarizer_screen():
         activebackground="#96BEE6",
         activeforeground="white",
         highlightthickness=0,
-        command=lambda: summarize_article(entry.get())
+        command=lambda: summarize_article(entry.get(), summary_box)
     )
 
     entry_label.grid(row=0, column=0, padx=5)
     entry.grid(row=0, column=1, padx=5)
     entry_button.grid(row=0, column=2, padx=5)
 
-    output_box = scrolledtext.ScrolledText(
+    summary_box = scrolledtext.ScrolledText(
         window,
         wrap=tk.WORD,
         width=90,
         height=25,
         font=("Arial", 12)
     )
-    output_box.pack(pady=20)
+    summary_box.pack(pady=20)
         
     navigation_bar()
 
