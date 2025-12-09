@@ -372,53 +372,75 @@ def article_summarizer_screen():
     )
     title_label.pack(pady=10)
 
-    link = tk.StringVar()
+    # --- Input Frame ---
+    link_var = tk.StringVar()
+    input_frame = tk.Frame(window, bg="#001E44")
+    input_frame.pack(pady=10)
 
-    controls = tk.Frame(window, bg="#001E44")
-    controls.pack(pady=10)
-
-    entry_label = tk.Label(
-        controls, 
-        text='Article Link:', 
-        font=('Arial', 12, 'bold'),
-        fg='white',
-        background='#001E44'
-    )
-
-    entry = tk.Entry(
-        controls,
-        textvariable=link,
-        width = 50,
-        font=("Arial", 12)
-    )
-
-    entry_button = tk.Button(
-        controls,
-        text="Enter",
-        width=12,
-        bg="#3b5998",
+    link_label = tk.Label(
+        input_frame,
+        text="Article Link:",
+        font=("Arial", 12, "bold"),
         fg="white",
-        font=("Arial", 11, "bold"),
-        activebackground="#96BEE6",
-        activeforeground="white",
-        highlightthickness=0,
-        command=lambda: summarize_article(entry.get())
+        bg="#001E44"
     )
+    link_label.grid(row=0, column=0, padx=5)
 
-    entry_label.grid(row=0, column=0, padx=5)
-    entry.grid(row=0, column=1, padx=5)
-    entry_button.grid(row=0, column=2, padx=5)
+    link_entry = tk.Entry(input_frame, textvariable=link_var, width=50, font=("Arial", 11))
+    link_entry.grid(row=0, column=1, padx=5)
 
-    output_box = scrolledtext.ScrolledText(
+    # --- Output Box ---
+    summary_box = scrolledtext.ScrolledText(
         window,
         wrap=tk.WORD,
         width=90,
         height=25,
         font=("Arial", 12)
     )
-    output_box.pack(pady=20)
-        
+    summary_box.pack(pady=20)
+
+    # --- Summary Logic ---###
+    def generate_summary():
+        try:
+            # Newspaper3K first
+            try:
+                article = Article(link_var.get())
+                article.download()
+                article.parse()
+                article.nlp()
+                summary = article.summary
+            except:
+                # Try Selenium fallback
+                from selenium_scraper import extract_with_selenium
+                text = extract_with_selenium(link_var.get())
+                if not text:
+                    summary_box.insert(tk.END, " Could not extract article text.\n")
+                    return
+
+                # Simple backup summarizer (your contribution)
+                sentences = text.split(".")
+                summary = ". ".join(sentences[:5]) + "..."
+
+            summary_box.delete(1.0, tk.END)
+            summary_box.insert(tk.END, "---- Article Summary ----\n\n")
+            summary_box.insert(tk.END, summary)
+
+        except Exception as e:
+            summary_box.insert(tk.END, f"Error generating summary:\n{e}")
+
+    summarize_button = tk.Button(
+        input_frame,
+        text="Summarize",
+        width=15,
+        bg="#3b5998",
+        fg="white",
+        font=("Arial", 11, "bold"),
+        command=generate_summary
+    )
+    summarize_button.grid(row=0, column=2, padx=5)
+
     navigation_bar()
+
 
 
 if __name__ == "__main__":
