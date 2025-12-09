@@ -109,8 +109,7 @@ def predict_news(link):
 
         vec = vectorizer.transform([text])
         prediction = model.predict(vec)[0]
-        result = "REAL" if prediction == 1 else "FAKE"
-
+        result = "REAL" if prediction == 1 else "Likely FAKE \n\nThis means the article contains several indicators commonly found in fake news."
         contributions = vec.toarray()[0] * model.coef_[0]
 
         feature_names = vectorizer.get_feature_names_out()
@@ -134,6 +133,23 @@ def predict_news(link):
 
         output_box.insert(tk.END, "\n---- Article Text ----\n\n")
         output_box.insert(tk.END, text)
+
+    except Exception as e:
+        output_box.insert(tk.END, f"Error fetching article:\n{e}")
+
+def summarize_article(link):
+    global output_box
+    output_box.delete(1.0, tk.END)
+
+    try:
+        article = Article(link)
+        article.download()
+        article.parse()
+        article.nlp()
+        summary = article.summary
+
+        output_box.insert(tk.END, "---- Article Summary ----\n\n")
+        output_box.insert(tk.END, summary)
 
     except Exception as e:
         output_box.insert(tk.END, f"Error fetching article:\n{e}")
@@ -227,7 +243,7 @@ def misinfo_screen():
     misinfo_box = scrolledtext.ScrolledText(
         window,
         wrap=tk.WORD,
-        width=90,
+        width=92,
         height=12,
         font=("Consolas", 12)
     )
@@ -245,7 +261,7 @@ def misinfo_screen():
     real_box = scrolledtext.ScrolledText(
         window,
         wrap=tk.WORD,
-        width=90,
+        width=92,
         height=12,
         font=("Consolas", 12)
     )
@@ -253,23 +269,23 @@ def misinfo_screen():
 
     # --- Misinfo Words ---
     indices = np.argsort(weights)[:50]
-    misinfo_box.insert(tk.END, "  # | Word             | Weight  | Avg TF-IDF | Max TF-IDF | Avg TF | IDF    | Doc Freq \n")
-    misinfo_box.insert(tk.END, "----+------------------+---------+------------+------------+--------+--------+----------\n")
+    misinfo_box.insert(tk.END, "  # | Word                 | Weight  | Avg TF-IDF | Max TF-IDF | Avg TF | IDF    | Doc Freq \n")
+    misinfo_box.insert(tk.END, "----+----------------------+---------+------------+------------+--------+--------+----------\n")
 
     for index, i in enumerate(indices):
         misinfo_box.insert(
             tk.END, 
-            f"{index+1:>3} | {feature_names[i]:<16} | {weights[i]:<7.4f} | {avg_tfidf[i]:<10.4f} | {max_tfidf[i]:<10.4f} | {avg_tf[i]:<5.4f} | {idf_values[i]:<5.4f} | {doc_freq[i]:<9} \n"
+            f"{index+1:>3} | {feature_names[i]:<20} | {weights[i]:<7.4f} | {avg_tfidf[i]:<10.4f} | {max_tfidf[i]:<10.4f} | {avg_tf[i]:<5.4f} | {idf_values[i]:<5.4f} | {doc_freq[i]:<9} \n"
         )
 
     # --- Real Words ---
     indices = np.argsort(weights)[-50:][::-1]
-    real_box.insert(tk.END, "  # | Word             | Weight  | Avg TF-IDF | Max TF-IDF | Avg TF | IDF    | Doc Freq \n")
-    real_box.insert(tk.END, "----+------------------+---------+------------+------------+--------+--------+----------\n")
+    real_box.insert(tk.END, "  # | Word                 | Weight  | Avg TF-IDF | Max TF-IDF | Avg TF | IDF    | Doc Freq \n")
+    real_box.insert(tk.END, "----+----------------------+---------+------------+------------+--------+--------+----------\n")
     for index, i in enumerate(indices):
         real_box.insert(
             tk.END,
-            f"{index+1:>3} | {feature_names[i]:<16} | {weights[i]:<7.4f} | {avg_tfidf[i]:<10.4f} | {max_tfidf[i]:<10.4f} | {avg_tf[i]:<5.4f} | {idf_values[i]:<5.4f} | {doc_freq[i]:<9} \n"
+            f"{index+1:>3} | {feature_names[i]:<20} | {weights[i]:<7.4f} | {avg_tfidf[i]:<10.4f} | {max_tfidf[i]:<10.4f} | {avg_tf[i]:<5.4f} | {idf_values[i]:<5.4f} | {doc_freq[i]:<9} \n"
         )
 
     navigation_bar()
@@ -346,6 +362,7 @@ def article_word_cloud_screen():
 
 def article_summarizer_screen():
     clear_screen()
+
     title_label = tk.Label(
         window,
         text="Article Summarizer",
@@ -355,6 +372,52 @@ def article_summarizer_screen():
     )
     title_label.pack(pady=10)
 
+    link = tk.StringVar()
+
+    controls = tk.Frame(window, bg="#001E44")
+    controls.pack(pady=10)
+
+    entry_label = tk.Label(
+        controls, 
+        text='Article Link:', 
+        font=('Arial', 12, 'bold'),
+        fg='white',
+        background='#001E44'
+    )
+
+    entry = tk.Entry(
+        controls,
+        textvariable=link,
+        width = 50,
+        font=("Arial", 12)
+    )
+
+    entry_button = tk.Button(
+        controls,
+        text="Enter",
+        width=12,
+        bg="#3b5998",
+        fg="white",
+        font=("Arial", 11, "bold"),
+        activebackground="#96BEE6",
+        activeforeground="white",
+        highlightthickness=0,
+        command=lambda: summarize_article(entry.get())
+    )
+
+    entry_label.grid(row=0, column=0, padx=5)
+    entry.grid(row=0, column=1, padx=5)
+    entry_button.grid(row=0, column=2, padx=5)
+
+    output_box = scrolledtext.ScrolledText(
+        window,
+        wrap=tk.WORD,
+        width=90,
+        height=25,
+        font=("Arial", 12)
+    )
+    output_box.pack(pady=20)
+        
     navigation_bar()
 
 
