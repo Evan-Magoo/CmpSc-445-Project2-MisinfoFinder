@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 import nltk
-nltk.download('punkt')
+nltk.download(['punkt', 'punkt_tab'])
 from nltk.tokenize import sent_tokenize
 from tkinter import scrolledtext
 from tkinter import messagebox
@@ -140,19 +140,40 @@ def predict_news(link, widget):
         widget.insert(tk.END, f"Error fetching article:\n{e}")
 
 
-
 def summarize_article(link, widget):
     widget.delete(1.0, tk.END)
 
+    try:
+        article = Article(link)
+        article.download()
+        article.parse()
+        text = article.text
 
+        sentences = sent_tokenize(text)
+        if len(sentences) < 2:
+            widget.insert(tk.END, "Article too short to summarize.")
+            return
 
+        vec = vectorizer.transform(sentences)
+        sim_matrix = cosine_similarity(vec)
+
+        scores = np.sum(sim_matrix, axis=1)
+        ranked_sentences = [sentences[i] for i in np.argsort(scores)[::-1]]
+
+        summary_length = max(1, len(sentences) // 5)
+        summary = ' '.join(ranked_sentences[:summary_length])
+
+        widget.insert(tk.END, "---- Article Summary ----\n\n")
+        widget.insert(tk.END, summary)
+
+    except Exception as e:
+        widget.insert(tk.END, f"Error fetching article:\n{e}")
 
 def clear_screen():
     for widget in window.winfo_children():
         widget.destroy()
 
 def fake_news_screen():
-    global output_box
     clear_screen()
 
     title_label = tk.Label(
@@ -194,7 +215,7 @@ def fake_news_screen():
         activebackground="#96BEE6",
         activeforeground="white",
         highlightthickness=0,
-        command=lambda: predict_news(entry.get())
+        command=lambda: predict_news(entry.get(), output_box)
     )
 
     entry_label.grid(row=0, column=0, padx=5)
@@ -353,7 +374,6 @@ def article_word_cloud_screen():
     navigation_bar()
 
 def article_summarizer_screen():
-    global summary_box
     clear_screen()
 
     title_label = tk.Label(

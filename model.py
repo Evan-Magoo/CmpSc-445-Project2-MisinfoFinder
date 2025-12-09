@@ -25,6 +25,8 @@ df['content'] = df['text'] + ' ' + df['title']
 X = df['content']
 y = df['label']
 
+print('Training Amount:', len(X))
+
 X_train, X_test, y_train, y_test = train_test_split(
     X,
     y,
@@ -49,6 +51,8 @@ model = LogisticRegression(
     random_state=42
 )
 model.fit(X_train_tfidf, y_train)
+
+print('Testing Amount:', len(X_test))
 
 y_pred = model.predict(X_test_tfidf)
 
