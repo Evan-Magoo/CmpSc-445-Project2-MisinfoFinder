@@ -399,27 +399,15 @@ def article_summarizer_screen():
     )
     summary_box.pack(pady=20)
 
-    # --- Summary Logic ---###
+    # --- Summary Logic ---
     def generate_summary():
         try:
-            # Newspaper3K first
-            try:
-                article = Article(link_var.get())
-                article.download()
-                article.parse()
-                article.nlp()
-                summary = article.summary
-            except:
-                # Try Selenium fallback
-                from selenium_scraper import extract_with_selenium
-                text = extract_with_selenium(link_var.get())
-                if not text:
-                    summary_box.insert(tk.END, " Could not extract article text.\n")
-                    return
+            article = Article(link_var.get())
+            article.download()
+            article.parse()
+            article.nlp()   # Newspaper3k's built-in summarizer
 
-                # Simple backup summarizer (your contribution)
-                sentences = text.split(".")
-                summary = ". ".join(sentences[:5]) + "..."
+            summary = article.summary
 
             summary_box.delete(1.0, tk.END)
             summary_box.insert(tk.END, "---- Article Summary ----\n\n")
@@ -440,6 +428,7 @@ def article_summarizer_screen():
     summarize_button.grid(row=0, column=2, padx=5)
 
     navigation_bar()
+
 
 
 
